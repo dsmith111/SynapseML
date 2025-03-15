@@ -1,6 +1,3 @@
-// Copyright (C) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License. See LICENSE in project root for information.
-
 package com.microsoft.azure.synapse.ml.lightgbm
 
 import com.microsoft.azure.synapse.ml.lightgbm.booster.LightGBMBooster
@@ -18,20 +15,13 @@ import org.apache.spark.sql.types.StructField
 
 object LightGBMClassifier extends DefaultParamsReadable[LightGBMClassifier]
 
-/** Trains a LightGBM Classification model, a fast, distributed, high performance gradient boosting
-  * framework based on decision tree algorithms.
-  * For more information please see here: https://github.com/Microsoft/LightGBM.
-  * For parameter information see here: https://github.com/Microsoft/LightGBM/blob/master/docs/Parameters.rst
-  * @param uid The unique ID.
-  */
 class LightGBMClassifier(override val uid: String)
   extends ProbabilisticClassifier[Vector, LightGBMClassifier, LightGBMClassificationModel]
-  with LightGBMBase[LightGBMClassificationModel] with SynapseMLLogging {
+  with LightGBMBase[LightGBMClassificationModel] with SynapseMLLogging with JavaMLReadable[LightGBMClassifier] {
   logClass(FeatureNames.LightGBM)
 
   def this() = this(Identifiable.randomUID("LightGBMClassifier"))
 
-  // Set default objective to be binary classification
   setDefault(objective -> LightGBMConstants.BinaryObjective)
 
   val isUnbalance = new BooleanParam(this, "isUnbalance",
@@ -57,10 +47,6 @@ class LightGBMClassifier(override val uid: String)
   }
 
   override protected def addCustomTrainParams(params: BaseTrainParams, dataset: Dataset[_]): BaseTrainParams = {
-    /* The native code for getting numClasses is always 1 unless it is multiclass-classification problem
-     * so we infer the actual numClasses from the dataset here.  Since this could be a full pass over
-     * the data, explicitly call it out as a calculation and only do it if needed.
-     */
     val classifierParams = params.asInstanceOf[ClassifierTrainParams]
     if (classifierParams.isBinary) params
     else classifierParams.setNumClass(getNumClasses(dataset, getMaxNumClasses))
@@ -86,10 +72,14 @@ class LightGBMClassifier(override val uid: String)
   }
 
   override def copy(extra: ParamMap): LightGBMClassifier = defaultCopy(extra)
+
+  @classmethod
+  def _from_java(cls, java_stage):
+    stage_name = java_stage.getClass().getName().replace("org.apache.spark", "pyspark")
+    stage_name = stage_name.replace("com.microsoft.azure.synapse.ml", "synapse.ml")
+    return from_java(java_stage, stage_name)
 }
 
-/** Special parameter for classification model for actual number of classes in dataset
-  */
 trait HasActualNumClasses extends Params {
   val actualNumClasses = new IntParam(this, "actualNumClasses",
     "Inferred number of classes based on dataset metadata or, if there is no metadata, unique count")
@@ -97,7 +87,6 @@ trait HasActualNumClasses extends Params {
   def setActualNumClasses(value: Int): this.type = set(actualNumClasses, value)
 }
 
-/** Model produced by [[LightGBMClassifier]]. */
 class LightGBMClassificationModel(override val uid: String)
     extends ProbabilisticClassificationModel[Vector, LightGBMClassificationModel]
       with LightGBMModelParams with LightGBMModelMethods with LightGBMPredictionParams
@@ -108,14 +97,6 @@ class LightGBMClassificationModel(override val uid: String)
 
   override protected lazy val pyInternalWrapper = true
 
-  /**
-    * Implementation based on ProbabilisticClassifier with slight modifications to
-    * avoid calling raw2probabilityInPlace to defer the probability calculation
-    * to lightgbm native code.
-    *
-    * @param dataset input dataset
-    * @return transformed dataset
-    */
   override def transform(dataset: Dataset[_]): DataFrame = {
     logTransform[DataFrame]({
       updateBoosterParamsBeforePredict()
@@ -126,7 +107,6 @@ class LightGBMClassificationModel(override val uid: String)
           s" numClasses=$numClasses, but thresholds has length ${getThresholds.length}")
       }
 
-      // Output selected columns only.
       var outputData = dataset
       var numColsOutput = 0
       if (getRawPredictionCol.nonEmpty) {
@@ -182,7 +162,6 @@ class LightGBMClassificationModel(override val uid: String)
 
   protected def predictColumn: Column = {
     if (getRawPredictionCol.nonEmpty && !isDefined(thresholds)) {
-      // Note: Only call raw2prediction if thresholds not defined
       udf(raw2prediction _).apply(col(getRawPredictionCol))
     } else if (getProbabilityCol.nonEmpty) {
       udf(probability2prediction _).apply(col(getProbabilityCol))
@@ -209,4 +188,10 @@ object LightGBMClassificationModel extends ComplexParamsReadable[LightGBMClassif
     val actualNumClasses = lightGBMBooster.numClasses
     new LightGBMClassificationModel(uid).setLightGBMBooster(lightGBMBooster).setActualNumClasses(actualNumClasses)
   }
+
+  @classmethod
+  def _from_java(cls, java_stage):
+    stage_name = java_stage.getClass().getName().replace("org.apache.spark", "pyspark")
+    stage_name = stage_name.replace("com.microsoft.azure.synapse.ml", "synapse.ml")
+    return from_java(java_stage, stage_name)
 }

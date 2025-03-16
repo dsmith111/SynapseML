@@ -1,8 +1,6 @@
 {
   "image": "mcr.microsoft.com/devcontainers/universal:2",
   "features": {
-    "ghcr.io/devcontainers-extra/features/scala-sdkman:2": {},
-    "ghcr.io/devcontainers-extra/features/sbt-sdkman:2": {},
     "ghcr.io/rocker-org/devcontainer-features/miniforge:2": {
       "version": "latest"
     }

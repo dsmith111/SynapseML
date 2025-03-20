@@ -1,7 +1,7 @@
 {
   "name": "SynapseML Dev Container",
   "build": {
-    "dockerfile": "Dockerfile"
+    "dockerfile": "../Dockerfile"
   },
   "postCreateCommand": "conda init && conda activate synapseml && sbt setup",
   "containerEnv": {

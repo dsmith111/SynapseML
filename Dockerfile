@@ -1,4 +1,4 @@
-FROM ubuntu:20.04-slim
+FROM ubuntu:20.04
 
 ARG SYNAPSEML_VERSION=1.0.10
 ARG DEBIAN_FRONTEND=noninteractive

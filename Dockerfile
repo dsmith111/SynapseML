@@ -25,8 +25,10 @@ RUN apt-get -qq update \
 
 # Install OpenJDK 8 and sbt (needed for SynapseML)
 RUN apt-get update && \
-    apt-get install -y openjdk-8-jre sbt && \
+    apt-get install -y openjdk-8-jre && \
     apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+RUN sdk install sbt
 
 # Install Miniconda and required Python packages
 RUN curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh \

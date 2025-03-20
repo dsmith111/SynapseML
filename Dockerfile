@@ -57,15 +57,15 @@ ENV PATH=/opt/conda/bin:$PATH
 COPY environment.yml /tmp/environment.yml
 RUN conda env create -f /tmp/environment.yml && conda clean -afy
 
-# Download and install Spark
-RUN wget https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
-    && tar -xzf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
-    && mv spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} /opt/spark \
-    && rm spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
+# # Download and install Spark
+# RUN wget https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
+#     && tar -xzf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
+#     && mv spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} /opt/spark \
+#     && rm spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
 
-ENV SPARK_HOME=/opt/spark
-ENV PYTHONPATH=$SPARK_HOME/python/:$SPARK_HOME/python/lib/py4j*:$PYTHON_PATH
-ENV PATH=$SPARK_HOME/bin/:$SPARK_HOME/python/:$PATH
+# ENV SPARK_HOME=/opt/spark
+# ENV PYTHONPATH=$SPARK_HOME/python/:$SPARK_HOME/python/lib/py4j*:$PYTHON_PATH
+# ENV PATH=$SPARK_HOME/bin/:$SPARK_HOME/python/:$PATH
 
 # Remove packages not needed anymore
 RUN apt-get remove --purge -y \

@@ -37,6 +37,22 @@ class LightGBMClassificationModel(LightGBMModelMixin, _LightGBMClassificationMod
         java_model = loader.loadNativeModelFromString(model)
         return JavaParams._from_java(java_model)
 
+    @classmethod
+    def _from_java(cls, java_stage):
+        """
+        Given a Java object, create and return a Python wrapper of it.
+        Used for ML persistence.
+
+        Args:
+            java_stage (JavaObject): The Java object to convert.
+
+        Returns:
+            object: The Python wrapper.
+        """
+        stage_name = java_stage.getClass().getName().replace("org.apache.spark", "pyspark")
+        stage_name = stage_name.replace("com.microsoft.azure.synapse.ml", "synapse.ml")
+        return from_java(java_stage, stage_name)
+
     def getBoosterNumClasses(self):
         """Get the number of classes from the booster.
 

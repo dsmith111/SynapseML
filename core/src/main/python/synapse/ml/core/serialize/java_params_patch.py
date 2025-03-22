@@ -98,3 +98,21 @@ def _mml_call_java(self, name, *args):
 
 JavaParams._make_java_param_pair = _mml_make_java_param_pair
 JavaWrapper._call_java = _mml_call_java
+
+@classmethod
+def _from_java(cls, java_stage):
+    """
+    Given a Java object, create and return a Python wrapper of it.
+    Used for ML persistence.
+
+    Args:
+        java_stage (JavaObject): The Java object to convert.
+
+    Returns:
+        object: The Python wrapper.
+    """
+    stage_name = java_stage.getClass().getName().replace("org.apache.spark", "pyspark")
+    stage_name = stage_name.replace("com.microsoft.azure.synapse.ml", "synapse.ml")
+    return from_java(java_stage, stage_name)
+
+JavaParams._from_java = _from_java

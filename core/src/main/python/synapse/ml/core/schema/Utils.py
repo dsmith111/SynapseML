@@ -73,7 +73,7 @@ class JavaMMLReadable(MLReadable):
 
 
 @inherit_doc
-class ComplexParamsMixin(MLReadable):
+class ComplexParamsMixin(JavaMLReadable):
     def _transfer_params_from_java(self):
         """
         Transforms the embedded com.microsoft.azure.synapse.ml.core.serialize.params from the companion Java object.
@@ -137,6 +137,22 @@ class ComplexParamsMixin(MLReadable):
             sc = SparkContext._active_spark_context
             pair_defaults_seq = sc._jvm.PythonUtils.toSeq(pair_defaults)
             self._java_obj.setDefault(pair_defaults_seq)
+
+    @classmethod
+    def _from_java(cls, java_stage):
+        """
+        Given a Java object, create and return a Python wrapper of it.
+        Used for ML persistence.
+
+        Args:
+            java_stage (JavaObject): The Java object to convert.
+
+        Returns:
+            object: The Python wrapper.
+        """
+        stage_name = java_stage.getClass().getName().replace("org.apache.spark", "pyspark")
+        stage_name = stage_name.replace("com.microsoft.azure.synapse.ml", "synapse.ml")
+        return from_java(java_stage, stage_name)
 
 
 @inherit_doc
